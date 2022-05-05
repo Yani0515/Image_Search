@@ -55,17 +55,18 @@ for training_name in training_names:
 
 # des_list - List where all the descriptors are stored
 des_list = []
-
+loc = []
 counter = 0
 for image_path in train_image_paths:
     img_train = cv2.imread(image_path)
     sift = cv2.xfeatures2d.SIFT_create()
     key_points, des = sift.detectAndCompute(img_train, None)
     des_list.append((image_path, des))
+    loc.append(key_points)
     # Display descriptors storing progress
     # print("\r Store Descriptors Progress : {:.2f}%".format(counter * 100 / len(image_paths)), end="", flush=True)
     counter = counter + 1
-
+print("num of images:" + str(len(train_image_paths)))
 print("Descriptors of Train Dataset Stored!")
 
 # Stack all the descriptors vertically in a numpy array
@@ -76,7 +77,7 @@ for image_path, descriptor in des_list[1:]:
 # Step 3: Codebook construction-----------------------------------
 # Apply Dimension reduction to local features
 # Perform k-means clustering
-k = 10
+k = 3
 model = KMeans(n_clusters=k)
 model.fit(descriptors)
 
@@ -97,7 +98,6 @@ train_img_features = ImageUtils.vector_quantization(train_image_paths, k, des_li
 
 print("Finished histogram!")
 
-
 # Step 4: Perform Tf-Idf vectorization -------------------------------
 # TF （Term Frequency）
 # IDF（Inverse Document Frequency）
@@ -116,13 +116,17 @@ comp = []
 for i in range(len(train_image_paths)):
     comp.append([train_image_paths[i], train_img_features[i]])
 
+
+def get_loc():
+    return loc
+
+
 # load vocabulary to db
 with open('vocabulary.pkl', 'wb') as vocabulary:
     pickle.dump(comp, vocabulary)
 # print('vocabulary is:', voc.name, voc.nbr_words)
 
 print("Finished scaling!")
-
 
 # For classifier: Train the Linear SVM -----------
 clf = LinearSVC()
