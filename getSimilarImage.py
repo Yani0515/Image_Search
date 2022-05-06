@@ -2,17 +2,12 @@ import os
 import pickle
 
 import cv2
-import homography
-import pcv
 import joblib
 import numpy as np
-from joblib.numpy_pickle_utils import xrange
-from matplotlib import pyplot as plt
-from scipy.cluster.vq import vq
-import ImageUtils
+
 import Utils
 from ImageUtils import vector_quantization
-from train_classifier import get_loc
+
 
 clf, classes_names, stdSlr, k, voc = joblib.load("bof.pkl")
 

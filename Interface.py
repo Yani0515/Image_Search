@@ -113,12 +113,27 @@
 # canvas.config(scrollregion=(0, 0, canvas_width, 1000))
 #
 # root.mainloop()
+import this
+import time
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import os
 import sys
+
+
+# class BackendThread(QProgressBar):
+#     # 通过类成员对象定义信号
+#     update_step = pyqtSignal(str)
+#
+#     # 处理业务逻辑
+#     def run(self):
+#         while 1:
+#             # 刷新1-10
+#             for i in range(1, 11):
+#                 QProgressBar.setValue()
+#                 time.sleep(1)
 
 
 class img_viewed(QWidget):
@@ -136,7 +151,7 @@ class img_viewed(QWidget):
         self.scrollAreaWidgetContents = QWidget(self)
         self.scrollAreaWidgetContents.setObjectName('scrollAreaWidgetContends')
 
-        # 进行网络布局
+        # grid Layout
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.scroll_ares_images.setWidget(self.scrollAreaWidgetContents)
         self.scroll_ares_images.setGeometry(20, 20, self.width, int(self.height * 0.7))
@@ -160,7 +175,10 @@ class img_viewed(QWidget):
 
         # initialize progress bar - invisible
         self.progressbar = QProgressBar(self)
-        self.progressbar.setGeometry(int(self.width/2 - 100), int(self.height * 0.7 / 2), 200, 25)
+        self.progressbar.setObjectName('progress_bar')
+        self.progressbar.setGeometry(int(self.width / 2 - 100), int(self.height * 0.7 / 2), 200, 25)
+        self.progressbar.setMaximum(100)
+        self.step = 0
         self.progressbar.setVisible(False)
 
         self.vertocall.addWidget(self.scroll_ares_images)
@@ -171,7 +189,8 @@ class img_viewed(QWidget):
         self.col = 0
         self.row = 0
 
-        self.initial_path = None
+        # self.initial_path = None
+        self.initial_path = 'Output'
 
     def open(self):
         file_path = QFileDialog.getExistingDirectory(self, '选择文文件夹', '/')
@@ -187,7 +206,6 @@ class img_viewed(QWidget):
             print(file_path)
             img_type = 'jpg'
             if file_path and img_type:
-
                 png_list = list(i for i in os.listdir(file_path) if str(i).endswith('.{}'.format(img_type)))
                 print(png_list)
                 num = len(png_list)
@@ -208,6 +226,29 @@ class img_viewed(QWidget):
         else:
 
             QMessageBox.warning(self, 'error', 'no .jpg file in director, please waite')
+
+    # progress bar control
+    def set_progress_bar_visibility(self, bool):
+        self.progressbar.setVisible(bool)
+
+    # def progress_bar_thread(self):
+    #     # make thread
+    #     self.thread = QThread()
+    #     self.backend = BackendThread(self.progressbar)
+    #
+    #     # 连接信号
+    #     self.backend.update_date.connect(self.handle_progressbar())
+    #     self.backend.moveToThread(self.thread)
+    #
+    #     # 开始线程
+    #     self.thread.started.connect(self.backend.run)
+    #     self.thread.start()
+
+    def handle_progressbar(self):
+        self.progressbar.setValue(self.step)
+
+    def update_step(self, step_current):
+        self.step = step_current
 
     def get_output_file_name(self, len):
         name_list = []
@@ -252,6 +293,7 @@ class img_viewed(QWidget):
 
     def setDisplayedImageSize(self, image_size):
         self.displayed_image_size = image_size
+
 
 class QClickableImage(QWidget):
     image_id = ''
@@ -300,8 +342,11 @@ class QClickableImage(QWidget):
         return self.image_id
 
 
-if __name__ == '__main__':
+def run_user_interface():
     app = QApplication(sys.argv)
     window = img_viewed()
     window.show()
     sys.exit(app.exec_())
+
+
+
