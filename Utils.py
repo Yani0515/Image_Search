@@ -3,6 +3,7 @@
 def key(x):
     return x[1]
 
+
 # return class of image
 def get_class(path):
     length = len(path.split('/'))

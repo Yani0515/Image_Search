@@ -4,27 +4,29 @@ import pickle
 import cv2
 import joblib
 import numpy as np
+from joblib.numpy_pickle_utils import xrange
+from scipy.cluster.vq import vq
 
 import Utils
 from ImageUtils import vector_quantization
 
-def generate_similar_image():
+
+def generate_similar_image(test_image_root, class_to_search):
     clf, classes_names, stdSlr, k, voc = joblib.load("bof.pkl")
 
     # set test output path
     out_path = "Output"
-
     out_path2 = "Output2"
-
-    out_path3 = "Output3"
 
     # set test image root
     test_image_root = "Input"
     # set test image path
     test_image_paths = os.listdir(test_image_root)
 
+    process_finished = False
+
     # set input class manually
-    test_class = "pizza"
+    # class_to_search = "pizza"
 
     # des_list - List where all the descriptors are stored
     des_list = []
@@ -50,11 +52,12 @@ def generate_similar_image():
         descriptors = np.vstack((descriptors, descriptor))
 
     # Apply Dimension reduction to local features
-    # test_features = np.zeros((len(test_image_paths), k), "float32")
-    # for i in xrange(len(test_image_paths)):
-    #     words, distance = vq(des_list[i][1], voc)
-    #     for w in words:
-    #         test_features[i][w] += 1
+    test_features = np.zeros((len(test_image_paths), k), "float32")
+    for i in xrange(len(test_image_paths)):
+        words, distance = vq(des_list[i][1], voc)
+        for w in words:
+            test_features[i][w] += 1
+
     test_img_features = vector_quantization(test_image_paths, k, des_list, voc)
 
     # Perform Tf-Idf vectorization
@@ -86,7 +89,6 @@ def generate_similar_image():
         print(prediction)
 
     classifier = []
-
     for i in range(len(distance)):
         if i > num_of_similar_img - 1:
             print(distance[i][1])
@@ -95,8 +97,8 @@ def generate_similar_image():
             break
 
         class_of_img = Utils.get_class(distance[i][0])
-
-        if class_of_img == test_class:
+        # compare predicted output with tag if there is one
+        if class_of_img == class_to_search:
             true_pos = true_pos + 1
             classifier.append(distance[i][0])
 
@@ -104,8 +106,15 @@ def generate_similar_image():
         image = cv2.imread(path)
         cv2.imwrite(os.path.join(out_path, 'rank_{0}.jpg'.format(i)), image)
 
-    if true_pos >= num_of_similar_img / 2:
-        for c in range(len(classifier)):
-            path = str(classifier[c])
-            image = cv2.imread(path)
-            cv2.imwrite(os.path.join(out_path3, 'rank{0}.jpg'.format(c)), image)
+
+    if len(classifier) != 0:
+        if true_pos >= num_of_similar_img / 2:
+            for c in range(len(classifier)):
+                path = str(classifier[c])
+                image = cv2.imread(path)
+                cv2.imwrite(os.path.join(out_path2, 'rank_{0}.jpg'.format(c)), image)
+            process_finished = True
+            return out_path2, process_finished
+
+    process_finished = True
+    return out_path, process_finished

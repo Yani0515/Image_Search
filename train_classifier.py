@@ -89,11 +89,11 @@ print("Finished Local Feature Clustering!")
 # Step 4: vector quantization--------------------------------------
 # Calculate the histogram of features
 # im_features - List of image feature
-# im_features = np.zeros((len(image_paths), k), "float32")
-# for i in xrange(len(image_paths)):
-#     words, distance = vq(des_list[i][1], voc)
-#     for w in words:
-#         im_features[i][w] += 1
+train_img_features  = np.zeros((len(train_image_paths), k), "float32")
+for i in xrange(len(train_image_paths)):
+    words, distance = vq(des_list[i][1], voc)
+    for w in words:
+        train_img_features[i][w] += 1
 train_img_features = ImageUtils.vector_quantization(train_image_paths, k, des_list, voc)
 
 print("Finished histogram!")

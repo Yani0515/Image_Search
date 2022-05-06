@@ -4,6 +4,8 @@ import pickle
 import cv2
 import joblib
 import numpy as np
+from joblib.numpy_pickle_utils import xrange
+from scipy.cluster.vq import vq
 
 import Utils
 from ImageUtils import vector_quantization
@@ -50,11 +52,13 @@ for test_image_path, descriptor in des_list[0:]:
     descriptors = np.vstack((descriptors, descriptor))
 
 # Apply Dimension reduction to local features
-# test_features = np.zeros((len(test_image_paths), k), "float32")
-# for i in xrange(len(test_image_paths)):
-#     words, distance = vq(des_list[i][1], voc)
-#     for w in words:
-#         test_features[i][w] += 1
+test_features = np.zeros((len(test_image_paths), k), "float32")
+for i in xrange(len(test_image_paths)):
+    words, distance = vq(des_list[i][1], voc)
+    for w in words:
+        test_features[i][w] += 1
+
+
 test_img_features = vector_quantization(test_image_paths, k, des_list, voc)
 
 # Perform Tf-Idf vectorization
@@ -113,57 +117,3 @@ if true_pos >= num_of_similar_img/2:
 # perception =
 recall = true_pos / num_of_similar_img
 print('recall = ' + str(recall))
-
-# ------------
-# rank = []
-# for counter in range(len(distance)):
-#     img_select = cv2.imread(distance[counter][0])
-#     sift = cv2.xfeatures2d.SIFT_create()
-#     key_points, des = sift.detectAndCompute(img_select, None)
-#     key_points_test, des_test = sift.detectAndCompute(img_test, None)
-#     # feature matching
-#     bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
-#     matches_o = bf.match(des_test, des)
-#     matches = sorted(matches_o, key=lambda x: x.distance)
-#     img3 = cv2.drawMatches(img_test, key_points_test, img_select, key_points, matches[:50], img_select, flags=2)
-#     # plt.imshow(img3), plt.show()
-#
-#     index_params = dict(algorithm=0, trees=5)
-#     search_params = dict(checks=50)
-#
-#     flann = cv2.FlannBasedMatcher(index_params, search_params)
-#     matches_m = flann.knnMatch(des, des_test, k=2)
-#     good = []
-#     for m, n in matches_m:
-#         if m.distance < 0.7 * n.distance:
-#             good.append(m)
-#     rank.append([distance[counter][0], len(good)])
-#     # good_len, mask, good = ImageUtils.match_img(des_test, des, key_points_test, key_points)
-#     # if good_len > 1:
-#     #     rank.append([distance[counter][0], ImageUtils.match_img(des_test, des, key_points_test, key_points), mask])
-#     #     draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
-#     #                        singlePointColor=None,
-#     #                        matchesMask=mask,  # draw only inliers
-#     #                        flags=2)
-#     #     img3 = cv2.drawMatches(img_test, file_key, img_select, key_points, good, None, **draw_params)
-#     #     cv2.imshow('ret', img3)
-#     #     cv2.imwrite(os.path.join(out_path3, 'rank{0}.jpg'.format(i)), img3)
-#
-# if len(rank) != 0:
-#     # sort by rank(matches)
-#     rank.sort(key=lambda t: t[1])
-#     true_pos = 0
-#
-#     for iter in range(i):
-#         class_of_img = Utils.get_class(rank[iter][0])
-#         if class_of_img == test_class:
-#             true_pos = true_pos + 1
-#         path = rank[iter][0]
-#         image = cv2.imread(path)
-#         cv2.imwrite(os.path.join(out_path2, 'rank{0}.jpg'.format(iter)), image)
-#
-#
-# #
-# #     # perception =
-#     recall = true_pos / num_of_similar_img
-#     print('recall2 = ' + str(recall))
